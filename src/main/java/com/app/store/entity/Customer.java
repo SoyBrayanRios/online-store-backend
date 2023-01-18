@@ -1,6 +1,6 @@
 package com.app.store.entity;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,6 +21,10 @@ public class Customer {
     private String firstName;
     @Column(name = "last_name")
     private String lastName;
+    @Column(name = "doc_type")
+    private String docType;
+    @Column(name = "idNumber")
+    private String docNumber;
     @Column(name = "email")
     private String email;
     @Column(name = "phone")

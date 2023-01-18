@@ -6,9 +6,9 @@ import com.app.store.dto.PurchaseResponse;
 import com.app.store.entity.Customer;
 import com.app.store.entity.Order;
 import com.app.store.entity.OrderItem;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 import java.util.UUID;
@@ -38,6 +38,12 @@ public class CheckoutServiceImpl implements CheckoutService{
         order.setShippingAddress(purchase.getShippingAddress());
         //Populate customer with order
         Customer customer = purchase.getCustomer();
+        //Check if this is an existing customer
+        String email = customer.getEmail();
+        Customer customerFromDB = customerRepository.findByEmail(email);
+        if (customerFromDB != null) {
+            customer = customerFromDB;
+        }
         customer.add(order);
         //Save to the database
         customerRepository.save(customer);
