@@ -1,9 +1,6 @@
 package com.app.store.dto;
 
-import com.app.store.entity.Address;
-import com.app.store.entity.Customer;
-import com.app.store.entity.Order;
-import com.app.store.entity.OrderItem;
+import com.app.store.entity.*;
 import lombok.Data;
 
 import java.util.Set;
@@ -16,5 +13,5 @@ public class Purchase {
     private Address billingAddress;
     private Order order;
     private Set<OrderItem> orderItems;
-
+    private Long userId;
 }

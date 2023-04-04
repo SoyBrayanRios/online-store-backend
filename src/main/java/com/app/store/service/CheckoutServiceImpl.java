@@ -1,11 +1,9 @@
 package com.app.store.service;
 
-import com.app.store.dao.CustomerRepository;
+import com.app.store.dao.*;
 import com.app.store.dto.Purchase;
 import com.app.store.dto.PurchaseResponse;
-import com.app.store.entity.Customer;
-import com.app.store.entity.Order;
-import com.app.store.entity.OrderItem;
+import com.app.store.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +15,14 @@ import java.util.UUID;
 public class CheckoutServiceImpl implements CheckoutService{
 
     private CustomerRepository customerRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private OrderRepository orderRepository;
+    @Autowired
+    private StatusRepository statusRepository;
+    @Autowired
+    private AddressRepository addressRepository;
 
     public CheckoutServiceImpl(CustomerRepository customerRepository) {
         this.customerRepository = customerRepository;
@@ -34,8 +40,20 @@ public class CheckoutServiceImpl implements CheckoutService{
         Set<OrderItem> orderItems = purchase.getOrderItems();
         orderItems.forEach(item -> order.add(item));
         //Populate order with billing and shipping address
-        order.setBillingAddress(purchase.getBillingAddress());
-        order.setShippingAddress(purchase.getShippingAddress());
+        Address billingAddress = addressRepository.findByMainAddressComplement(purchase.getBillingAddress().getMainAddress(), purchase.getBillingAddress().getComplement());
+        if (billingAddress != null) {
+            order.setBillingAddress(billingAddress);
+        } else {
+            order.setBillingAddress(addressRepository.save(purchase.getBillingAddress()));
+        }
+
+        Address shippingAddress = addressRepository.findByMainAddressComplement(purchase.getShippingAddress().getMainAddress(), purchase.getShippingAddress().getComplement());
+        if (shippingAddress != null) {
+            order.setShippingAddress(shippingAddress);
+        } else {
+            order.setShippingAddress(addressRepository.save(purchase.getShippingAddress()));
+        }
+
         //Populate customer with order
         Customer customer = purchase.getCustomer();
         //Check if this is an existing customer
@@ -44,9 +62,14 @@ public class CheckoutServiceImpl implements CheckoutService{
         if (customerFromDB != null) {
             customer = customerFromDB;
         }
-        customer.add(order);
+        User user = userRepository.getById(purchase.getUserId());
         //Save to the database
         customerRepository.save(customer);
+        userRepository.save(user);
+        order.setUser(user);
+        order.setCustomer(customer);
+        order.setStatus(statusRepository.getById(1L));
+        orderRepository.save(order);
         //return a response
         return new PurchaseResponse(orderTrackingNumber);
     }
